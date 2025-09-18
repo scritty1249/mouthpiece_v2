@@ -84,21 +84,17 @@ def semantic_tokenizer(
 
 @torch.no_grad()
 def generate_audio(
-    compiled_indices: np.typing.NDArray,
+    compiled_tokens: np.typing.NDArray,
     config_name: str = "modded_dac_vq",
     checkpoint_path: Path = Path("checkpoints/openaudio-s1-mini/codec.pth"),
     device: str = "cuda"
 ):
     model = load_model(config_name, checkpoint_path, device=device)
 
-    if input_path.suffix == ".npy":
-        logger.info(f"Processing precomputed indices from {input_path}")
-        indices = np.load(input_path)
-        indices = torch.from_numpy(indices).to(device).long()
-        assert indices.ndim == 2, f"Expected 2D indices, got {indices.ndim}"
-        indices_lens = torch.tensor([indices.shape[1]], device=device, dtype=torch.long)
-    else:
-        raise ValueError(f"Unknown input type: {input_path}")
+    logger.info(f"Processing precomputed indices")
+    indices = torch.from_numpy(compiled_tokens).to(device).long()
+    assert indices.ndim == 2, f"Expected 2D indices, got {indices.ndim}"
+    indices_lens = torch.tensor([indices.shape[1]], device=device, dtype=torch.long)
 
     # Restore
     fake_audios, audio_lengths = model.decode(indices, indices_lens)

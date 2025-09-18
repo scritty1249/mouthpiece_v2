@@ -1,0 +1,42 @@
+from fish_speech.models.dac.inference import generate_audio
+from fish_speech.models.text2semantic.inference import generate_tokens
+
+import pyrootutils
+import utils.audio
+import utils.pickler
+import config
+
+pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
+
+# Assumes model already exists
+
+EXTRA_OPTIONS = {
+    "top_p": 0.88,
+    "repetition_penalty": 1.12,
+    "temperature": 0.84
+}
+MODEL_BASE_PATH = (config.MODEL_DIR / config.MODEL)
+MODEL_TOKEN_PATH = MODEL_BASE_PATH.with_suffix(".npy")
+MODEL_TEXT_PATH = MODEL_BASE_PATH.with_suffix(".txt")
+
+MODEL_TOKEN, MODEL_TEXT = pickler.load_model_source(MODEL_TOKEN_PATH, MODEL_TEXT_PATH)
+
+try:
+    while True:
+        text = input("Enter text to read: ")
+        tokens = generate_tokens(
+            prompt_texts = MODEL_TEXT,
+            prompt_tokens = MODEL_TOKEN,
+            text = text
+        )
+        audio_array, samplerate = generate_audio(
+            compiled_tokens = tokens
+        )
+        runners = [r for r in audio.mirror_audio(
+            audio_array,
+            config.AUDIO_DEVICES
+        )]
+        for runner in runners:
+            runner.join()
+except KeyboardInterrupt:
+    print("KeyboardInterrupt, stopping program")
