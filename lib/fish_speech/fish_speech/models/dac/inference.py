@@ -51,7 +51,7 @@ def semantic_tokenizer(
     config_name: str = "modded_dac_vq",
     checkpoint_path: Path = Path("checkpoints/openaudio-s1-mini/codec.pth"),
     device: str = "cuda"
-):
+) -> np.typing.NDArray:
     model = load_model(config_name, checkpoint_path, device=device)
 
     if input_path.suffix in AUDIO_EXTENSIONS:
@@ -88,7 +88,7 @@ def generate_audio(
     config_name: str = "modded_dac_vq",
     checkpoint_path: Path = Path("checkpoints/openaudio-s1-mini/codec.pth"),
     device: str = "cuda"
-):
+) -> tuple[np.typing.NDArray, int]:
     model = load_model(config_name, checkpoint_path, device=device)
 
     logger.info(f"Processing precomputed indices")

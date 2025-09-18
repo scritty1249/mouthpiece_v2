@@ -39,7 +39,6 @@ def save_model_source(
                 with open(output_path.with_suffix(".txt"), "w") as outfile:
                     outfile.write(source_text)
         save(save_path, semantic_token_data)
-        return save_path
     except:
         ...
 
