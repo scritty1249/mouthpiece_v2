@@ -2,6 +2,7 @@
 _*
 config.py
 models/*
+samples/*
 !__init__*
 !.*root
 !.vscode/
