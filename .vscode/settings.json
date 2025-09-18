@@ -1,0 +1,14 @@
+{
+  "terminal.integrated.profiles.windows": {
+    "venv-cmd": {
+        "path": "${env:windir}\\System32\\cmd.exe",
+        "args": [
+            "/k",
+            "conda init && cls && conda activate ./.conda"
+        ]
+    }
+  },
+  "terminal.integrated.defaultProfile.windows": "venv-cmd",
+  "python.venvPath": "./.conda",
+  "python.interpreterPath": "${workspaceFolder}/.conda"
+}

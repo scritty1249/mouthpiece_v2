@@ -1,0 +1,8 @@
+.*
+_*
+config.py
+models/*
+!__init__*
+!.*root
+!.vscode/
+!.gitignore
