@@ -603,7 +603,7 @@ def generate_tokens(
     """Generate semantic tokens from text to be fed into generate_audio
 
     Args:
-        prompt_text (Optional[tuple[str, ...]]): _description_
+        prompt_texts (Optional[tuple[str, ...]]): _description_
         prompt_tokens (Optional[tuple[np.typing.NDArray, ...]]): _description_
         text (str, optional): _description_. Defaults to "Hello, World!".
         num_samples (int, optional): _description_. Defaults to 2.
@@ -630,12 +630,12 @@ def generate_tokens(
     precision = torch.half if half else torch.bfloat16
 
     if (
-        prompt_text is not None
+        prompt_texts is not None
         and prompt_tokens is not None
-        and len(prompt_text) != len(prompt_tokens)
+        and len(prompt_texts) != len(prompt_tokens)
     ):
         raise ValueError(
-            f"Number of prompt text ({len(prompt_text)}) and prompt tokens ({len(prompt_tokens)}) should be the same"
+            f"Number of prompt text ({len(prompt_texts)}) and prompt tokens ({len(prompt_tokens)}) should be the same"
         )
 
     logger.info("Loading model ...")
@@ -676,7 +676,7 @@ def generate_tokens(
         compile=compile,
         iterative_prompt=iterative_prompt,
         chunk_length=chunk_length,
-        prompt_text=list(prompt_text) if prompt_text else None,
+        prompt_text=list(prompt_texts) if prompt_texts else None,
         prompt_tokens=prompt_tokens_list,
     )
 

@@ -1,4 +1,5 @@
 from typing import Callable, Optional
+from loguru import logger
 
 import threading
 import sounddevice as sd
