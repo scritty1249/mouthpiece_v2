@@ -33,7 +33,7 @@ try:
         **EXTRA_OPTIONS
     )
     while True:
-        text = input("Enter text to read: ")
+        text = input("Enter text to read:\n")
         audio_array, samplerate = model.generate(text)
         logger.info("playing audio")
         runners = [r for r in audio.mirror_audio(
