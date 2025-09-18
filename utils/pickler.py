@@ -4,9 +4,9 @@ from pathlib import Path
 from string import ascii_letters, digits
 from os import PathLike
 
-def load_model_source(
-    token_paths: Optional[tuple[Path, ...]],
-    text_paths: Optional[tuple[Path, ...]]
+def load_model_sources(
+    token_paths: tuple[PathLike, ...],
+    text_paths: tuple[PathLike, ...]
 ):
     if len(token_paths) != len(text_paths):
         raise ValueError(
@@ -27,7 +27,7 @@ def load_model_source(
 def save_model_source(
     semantic_token_data: NDArray,
     output_path: Path,
-    source_text: str|Path = None
+    source_text: str|PathLike = None
 ):
     save_path = output_path.with_suffix(".npy")
     try:

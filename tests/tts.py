@@ -1,13 +1,12 @@
-from fish_speech.models.dac.inference import generate_audio
-from fish_speech.models.text2semantic.inference import generate_tokens
-from pathlib import Path
-
 import pyrootutils
-import utils.audio
-import utils.pickler
-import config
+pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=True, cwd=True)
 
-pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
+from lib.fish_speech.fish_speech.models.dac.inference import generate_audio
+from lib.fish_speech.fish_speech.models.text2semantic.inference import generate_tokens
+from pathlib import Path
+from utils import pickler, audio
+
+import config
 
 # Assumes model already exists
 
@@ -16,18 +15,18 @@ EXTRA_OPTIONS = {
     "repetition_penalty": 1.12,
     "temperature": 0.84
 }
-MODEL_BASE_PATH = (config.MODEL_DIR / config.MODEL)
+MODEL_BASE_PATH = (Path(config.MODELS_DIR) / config.MODEL)
 MODEL_TOKEN_PATH = MODEL_BASE_PATH.with_suffix(".npy")
 MODEL_TEXT_PATH = MODEL_BASE_PATH.with_suffix(".txt")
 
-MODEL_TOKEN, MODEL_TEXT = pickler.load_model_source(MODEL_TOKEN_PATH, MODEL_TEXT_PATH)
+MODEL_TOKEN, MODEL_TEXT = pickler.load_model_sources([MODEL_TOKEN_PATH], [MODEL_TEXT_PATH])
 
 try:
     while True:
         text = input("Enter text to read: ")
         tokens = generate_tokens(
-            prompt_texts = MODEL_TEXT,
-            prompt_tokens = MODEL_TOKEN,
+            prompt_texts = [MODEL_TEXT],
+            prompt_tokens = [MODEL_TOKEN],
             text = text,
             num_samples = 1,
             checkpoint_path = Path(config.CHECKPOINT_DIR),

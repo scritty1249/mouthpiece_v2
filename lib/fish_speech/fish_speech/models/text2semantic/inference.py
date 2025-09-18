@@ -14,6 +14,9 @@ from loguru import logger
 from tqdm import tqdm
 from transformers import AutoTokenizer
 
+import pyrootutils
+pyrootutils.setup_root(__file__, indicator=".fish-speech-root", pythonpath=True)
+
 from fish_speech.content_sequence import (
     ContentSequence,
     TextPart,

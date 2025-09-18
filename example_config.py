@@ -1,4 +1,4 @@
-TOKENS_DIR = "models"
+MODELS_DIR = "models"
 CHECKPOINT_DIR = "checkpoints/openaudio-s1-mini"
 CHECKPOINT_PATH = "checkpoints/openaudio-s1-mini/codec.pth"
 MODEL_CONFIG = "modded_dac_vq"

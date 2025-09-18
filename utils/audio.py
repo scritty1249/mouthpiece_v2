@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Optional
 
 import threading
 import sounddevice as sd

@@ -11,7 +11,7 @@ from hydra.utils import instantiate
 from loguru import logger
 from omegaconf import OmegaConf
 
-pyrootutils.setup_root(__file__, indicator=".lib-root", pythonpath=True)
+pyrootutils.setup_root(__file__, indicator=".fish-speech-root", pythonpath=True)
 
 from fish_speech.utils.file import AUDIO_EXTENSIONS
 # register eval resolver
