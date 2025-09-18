@@ -584,18 +584,46 @@ def generate_tokens(
     prompt_tokens: Optional[tuple[np.typing.NDArray, ...]],
     text: str = "Hello, World!",
     num_samples: int = 2,
-    max_new_tokens: int = 0, # infinite
-    top_p: int = 0.8,
-    repetition_penalty: float = 1.1,
-    temperature: float = 0.8,
     checkpoint_path: Path = Path("checkpoints/openaudio-s1-mini"),
     device: str = "cuda",
     compile: bool = False,
-    seed: int = 42,
     half: bool = False,
     iterative_prompt: bool = True,
+    
     chunk_length: int = 300,
+    max_new_tokens: int = 0, # infinite
+    top_p: float = 0.8,
+    repetition_penalty: float = 1.1,
+    temperature: float = 0.8,
+    seed: int = 42,
 ):
+    """Generate semantic tokens from text to be fed into generate_audio
+
+    Args:
+        prompt_text (Optional[tuple[str, ...]]): _description_
+        prompt_tokens (Optional[tuple[np.typing.NDArray, ...]]): _description_
+        text (str, optional): _description_. Defaults to "Hello, World!".
+        num_samples (int, optional): _description_. Defaults to 2.
+        checkpoint_path (Path, optional): _description_. Defaults to Path("checkpoints/openaudio-s1-mini").
+        device (str, optional): _description_. Defaults to "cuda".
+        compile (bool, optional): _description_. Defaults to False.
+        half (bool, optional): _description_. Defaults to False.
+        iterative_prompt (bool, optional): _description_. Defaults to True.
+
+        chunk_length (int, optional): 0 means off. Defaults to 300.
+        max_new_tokens (int, optional): 0 means infinite. Defaults to 0.
+        top_p (float, optional): Defaults to 0.8.
+        repetition_penalty (float, optional): _description_. Defaults to 1.1.
+        temperature (float, optional): _description_. Defaults to 0.8.
+        seed (int, optional): 0 means randomized interface, otherwise deterministic. Defaults to 42.
+
+
+    Raises:
+        ValueError: Prompt texts must each have a corrosponding prompt token.
+
+    Yields:
+        numpy.ndarray
+    """
     precision = torch.half if half else torch.bfloat16
 
     if (

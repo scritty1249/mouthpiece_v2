@@ -44,17 +44,13 @@ def play_audio(data, device=None, samplerate=None, callback=None):
     t.start()
     return t
 
-def mirror_audio(data, devices: tuple[str|int, ...], samplerates: tuple[int|None, ...], callbacks: Optional[tuple[Callable|None, ...]]):
-    if len(devices) != len(samplerates):
-        raise ValueError(
-            f"Number of devices ({len(devices)}), samplerates ({len(samplerates)}) should be the same"
-        )
+def mirror_audio(data, devices: tuple[str|int, ...], callbacks: Optional[tuple[Callable|None, ...]] = None, samplerate: int = None):
     if callbacks is None:
         callbacks = [None] * len(devices)
     elif len(callbacks) != len(devices):
         callbacks.extend([None] * (len(devices) - len(callbacks)))
-    for device, samplerate in zip(devices, samplesrates, callbacks):
-        yield play_audio(data, device, samplerate, callback)        
+    for device, callback in zip(devices, callbacks):
+        yield play_audio(mono_to_stereo(data), device, samplerate, callback)        
 
 def mono_to_stereo(data):
     return np.stack((data, data), axis=1).astype(np.float32)

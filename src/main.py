@@ -4,6 +4,7 @@ from fish_speech.models.text2semantic.inference import generate_tokens
 import pyrootutils
 import utils.audio
 import utils.pickler
+import config
 
 pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 
