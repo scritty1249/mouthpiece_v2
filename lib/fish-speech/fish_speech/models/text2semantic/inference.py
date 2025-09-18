@@ -580,7 +580,7 @@ def launch_thread_safe_queue(
     return input_queue
 
 def generate_tokens(
-    prompt_text: Optional[tuple[str, ...]],
+    prompt_texts: Optional[tuple[str, ...]],
     prompt_tokens: Optional[tuple[np.typing.NDArray, ...]],
     text: str = "Hello, World!",
     num_samples: int = 2,
