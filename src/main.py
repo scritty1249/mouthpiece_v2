@@ -57,8 +57,7 @@ def traverse_history(up: bool = True):
         set_text(TEXT_HISTORY.prev())
 
 def action_return():
-    print(statuslabel.cget("foreground"))
-    if statuslabel.cget("foreground") == "white" and get_text(False):
+    if str(statuslabel.cget("foreground")) == "white" and len(get_text(False)) > 0:
         text = get_text(False)
         processed_text = get_text()
         logger.info("Triggered text: " + processed_text)
@@ -199,7 +198,7 @@ options_frame.pack()
 top_p_label = tk.ttk.Label(options_frame, text="Top-P", justify="left", anchor=tk.W)
 top_p_label.grid(row=0, column=0, sticky=tk.W, **DEFAULT_PADDING)
 top_p_value = tk.DoubleVar()
-top_p_value.set(0.8)
+top_p_value.set(88)
 top_p_slider = tk.ttk.Scale(
     options_frame,
     from_= 70,  # Minimum value
@@ -215,7 +214,7 @@ top_p_value_label.grid(row=0, column=3, sticky=tk.E, **DEFAULT_PADDING)
 temp_label = tk.ttk.Label(options_frame, text="Temperature", justify="left", anchor=tk.W)
 temp_label.grid(row=1, column=0, sticky=tk.W, **DEFAULT_PADDING)
 temp_value = tk.DoubleVar()
-temp_value.set(0.8)
+temp_value.set(84)
 temp_slider = tk.ttk.Scale(
     options_frame,
     from_= 70,  # Minimum value
@@ -231,7 +230,7 @@ temp_value_label.grid(row=1, column=3, sticky=tk.E, **DEFAULT_PADDING)
 rep_pen_label = tk.ttk.Label(options_frame, text="Repetition Penalty", justify="left", anchor=tk.W)
 rep_pen_label.grid(row=2, column=0, sticky=tk.W, **DEFAULT_PADDING)
 rep_pen_value = tk.DoubleVar()
-rep_pen_value.set(0.8)
+rep_pen_value.set(112)
 rep_pen_slider = tk.ttk.Scale(
     options_frame,
     from_= 100,  # Minimum value
