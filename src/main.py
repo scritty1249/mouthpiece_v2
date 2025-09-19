@@ -1,3 +1,5 @@
+import pyrootutils
+pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=True, cwd=True)
 from lib.fish_speech.fish_speech.models.dac.inference import generate_audio
 from lib.fish_speech.fish_speech.models.text2semantic.inference import generate_tokens
 from pathlib import Path
@@ -5,8 +7,7 @@ from utils import audio, pickler
 
 import config
 import tkinter as tk
-import pyrootutils
-pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
+
 # Assumes model already exists
 def generate_tts(text: str):
     tokens = next(generate_tokens(  # supports loading multiple models at once, but this test only uses one
