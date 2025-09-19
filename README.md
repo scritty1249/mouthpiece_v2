@@ -14,11 +14,11 @@ As always, torch and torchaudio version should be changed to match whichever CUD
 # Setup
 - pip install `torch-requirements.txt` first
 - pip install the regular `requirements.txt` after
-- fill in relevant fields in `create_model.py` to generate model tokens
-- execute `create_model.py`
+- fill in relevant fields in `config_train.py` to generate model tokens
+- execute `create_model.py` from project root directory
 
 # Generating model tokens
-- __example.wav__: Requires a 5-20 second snippet of audio in waveform format
-- __example.txt__: Transcript corrosponding to the audio
+- __example.wav__: Requires a 5-20 second snippet of audio in waveform format. Accepts multiple files of varying sample rates.
+- __example.txt__: Transcript corrosponding to the audio. Also accepts multiple files.
 
 # Usage
