@@ -1,6 +1,5 @@
 import os
 import queue
-import threading
 import time
 import traceback
 import hydra
@@ -13,6 +12,7 @@ from typing import Callable, Literal, Optional, Tuple, Union
 import numpy as np
 import torch
 import torch._inductor.config
+import threading
 from loguru import logger
 from tqdm import tqdm
 from transformers import AutoTokenizer
@@ -22,7 +22,6 @@ from omegaconf import OmegaConf
 import pyrootutils
 
 pyrootutils.setup_root(Path(__file__).parent / "../lib/fish_speech", indicator=".fish-speech-root", pythonpath=True)
-
 from fish_speech.content_sequence import (
     ContentSequence,
     TextPart,
@@ -676,6 +675,7 @@ class Model:
             torch.cuda.manual_seed(seed)
 
         self.audio_model = load_model(self.config_name, self.checkpoint_path, device=self.device)
+        # self.audio_model.share_memory() # fork not supported on windows so this is useless
 
     def generate_tokens(self, text: str):
         generator = generate_long(
@@ -730,3 +730,19 @@ class Model:
         return (fake_audio, self.audio_model.sample_rate)
     def generate(self, text: str):
         return self.generate_audio(self.generate_tokens(text))
+
+    def _generate_audio_runner(self, text, callback: Optional[Callable[[np.typing.NDArray, int], None]] = None):
+        tokens = self.generate_tokens(text)
+        audio, samplerate = self.generate_audio(tokens)
+        if callback is not None:
+            callback(audio, samplerate)
+        return (audio, samplerate)
+
+    def generate_async(self, text: str, callback: Optional[Callable[[np.typing.NDArray, int], None]] = None):
+        runner = threading.Thread(target=self._generate_audio_runner, args=(text, callback), daemon=True)
+        runner.start()
+        return runner
+
+    def __del__(self):
+        del self.audio_model
+

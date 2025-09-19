@@ -1,85 +1,175 @@
 import pyrootutils
-pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=True, cwd=True)
-from lib.fish_speech.fish_speech.models.dac.inference import generate_audio
-from lib.fish_speech.fish_speech.models.text2semantic.inference import generate_tokens
-from pathlib import Path
-from utils import audio, pickler
+pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 
-import config
 import tkinter as tk
+import tkinter.font
+import config
 
-# Assumes model already exists
-def generate_tts(text: str):
-    tokens = next(generate_tokens(  # supports loading multiple models at once, but this test only uses one
-        prompt_texts = [MODEL_TEXT],
-        prompt_tokens = [MODEL_TOKEN],
+from ctypes import windll
+from pathlib import Path
+from utils import pickler, audio
+from utils.speech import Model
+from loguru import logger
+from sv_ttk import use_dark_theme
+from string import ascii_letters
+from utils.history import BidirectionalIterator
+
+def key_enter(event):
+    if not (event.state & 0x0001): # only trigger if shift key is not also pressed (state & 0x0001 means shift is down)
+        logger.debug("Triggered key enter")
+        submit_btn.invoke()
+    return "break"
+
+def key_arrwup(event):
+    if textarea.index(tk.INSERT) == "1.0": # only trigger if cursor is already at the start of text
+        logger.debug("Triggered key arrow up")
+        traverse_history()
+    return "break"
+
+def key_arrwdwn(event):
+    if textarea.index(tk.INSERT) == textarea.index(tk.END + "-1c"): # only trigger if cursor is already at the end of text
+        logger.debug("Triggered key arrow down")
+        traverse_history(False)
+    return "break"
+
+def key_esc(event):
+    global TEXT_HISTORY
+    logger.debug("Triggered key escape")
+    TEXT_HISTORY.reset_iter()
+    set_text()
+
+def insert_history(text: str):
+    global TEXT_HISTORY
+    if text:
+        if text in TEXT_HISTORY:
+            TEXT_HISTORY.pop(TEXT_HISTORY.index(text))
+        TEXT_HISTORY.insert(text)
+        TEXT_HISTORY.reset_iter()
+
+def traverse_history(up: bool = True):
+    global TEXT_HISTORY
+    # Traverse up (True) or down (False)
+    if up and TEXT_HISTORY.hasnext():
+        set_text(TEXT_HISTORY.next())
+    elif not up and TEXT_HISTORY.hasprev():
+        set_text(TEXT_HISTORY.prev())
+
+def action_return():
+    text = get_text(False)
+    processed_text = get_text()
+    logger.info("Triggered text: " + processed_text)
+    insert_history(text)
+    set_text()
+    generate_play(processed_text)
+    logger.debug("Called generation daemon")
+
+def get_text(process_text: bool = True):
+    text = textarea.get("1.0",tk.END).strip()
+    if process_text:
+        VALID_PUNCTUATION = set(".!?~")
+        if len(text) > 1:
+            if text[-1] not in set(ascii_letters):
+                if text[-1] not in VALID_PUNCTUATION:
+                    text = text[:-1] + "."
+            else:
+                text += "."
+    return text
+
+def set_text(text: str = ""):
+    textarea.delete("1.0", tk.END)
+    if text: textarea.insert("1.0", text)
+    textarea.mark_set("insert", tk.END + "-1c")
+
+def set_status(state: int):
+    if state == 1: # idle
+        statuslabel.config(foreground = "white")
+        statustext.set(". . .")
+    elif state == 2: # loading
+        statustext.set("Thinking")
+        statuslabel.config(foreground = "cyan")
+    elif state == 3: # playing
+        statustext.set("Playing audio")
+        statuslabel.config(foreground = "green")
+    statuslabel.update()
+
+
+def _callback_gore(audio_array, samplerate):
+    logger.debug("finished generating audio")
+    set_status(3)
+    [_ for _ in audio.mirror_audio(
+        data=audio_array,
+        devices=config.AUDIO_DEVICES,
+        callbacks=[lambda: set_status(1) and logger.debug("Finished playing audio")],
+        samplerate=samplerate
+    )]
+
+def generate_play(text: str):
+    global MODEL
+    set_status(2)
+    MODEL.generate_async(
         text = text,
-        num_samples = 1,
-        checkpoint_path = Path(config.CHECKPOINT_DIR),
-        **EXTRA_OPTIONS
-    ))
-    audio_data, samplerate = generate_audio(
-        compiled_tokens = model_token, 
-        checkpoint_path = config.CHECKPOINT_PATH
-    )
-    audio.mirror_audio(
-        data = audio_data,
-        devices = config.AUDIO_DEVICES,
-        samplerate = samplerate
+        callback = _callback_gore
     )
 
-def get_entry_text(*args):
-    text = entry_text.get()
-    if len(text) > 0:
-        print("Entry text:", text)
-        def runner():
-            entry_button_text.set("thinking")
-            root.update()
-            #entry_button.update_idletasks()
-            generate_tts(text)
-            entry_label_text.set("TTS Input: (Speaking)")
-            entry_button_text.set("Speak text")
-            return
-        t = threading.Thread(target=runner)
-        entry_text.set("")
-        t.start()
-
-def stop_audio():
-    print("Stopping playback")
-    sd.stop()
-
-def on_entry_change(*args):
-    if len(entry_text.get()) > 1:
-        entered = entry_text.get()[-1]
-
+DEFAULT_PADDING = { "padx": 15, "pady": 15 }
+TEXT_HISTORY = BidirectionalIterator()
+# Setting up root
 root = tk.Tk()
-root.title("Mouthpiece V2 Interface")
+windll.shcore.SetProcessDpiAwareness(1) # fixes blurriness
+root.option_add("*Font", ("Segoe UI", 12))
+root.title("Mouthpiece v2")
+root.geometry("400x300+300+120")
+use_dark_theme()
 
-# Entry Widget
-input_label_text = tk.StringVar()
-input_label_text.set("TTS Input:")
-input_label = tk.Label(root, textvariable=entry_label_text)
-input_label.pack()
-input_field = tk.Text(root, height=15, width=40, yscrollcommand=True, xscrollcommand=False)
-input_field.pack()
-speak_button_text = tk.StringVar()
-speak_button_text.set("Speak text")
-speak_button = tk.Button(root, textvariable=entry_button_text, command=get_entry_text)
-speak_button.pack()
+logger.info("Loading data")
+MODEL_BASE_PATH = (Path(config.MODELS_DIR) / config.MODEL)
+MODEL_TOKEN_PATH = MODEL_BASE_PATH.with_suffix(".npy")
+MODEL_TEXT_PATH = MODEL_BASE_PATH.with_suffix(".txt")
 
-# Stop Widget
-stop_button = tk.Button(root, text="Stop audio playback", command=stop_audio)
-stop_button.pack()
+MODEL_TOKEN, MODEL_TEXT = next(pickler.load_model_sources([MODEL_TOKEN_PATH], [MODEL_TEXT_PATH])) # supports loading multiple models at once, for now only use one
 
-# Model Widget
-model_name = tk.StringVar(root)
-model_name.set(MODEL_LIST[5])
-model_label = tk.Label(root, text="Select a model")
-model_label.pack()
-model_dropdown = tk.OptionMenu(root, model_name, *MODEL_LIST)
-model_dropdown.pack()
+logger.info(f"Initializing model preset {config.MODEL}")
+MODEL = Model(
+    prompt_text = MODEL_TEXT,
+    prompt_token = MODEL_TOKEN,
+    checkpoint_dir = Path(config.CHECKPOINT_DIR),
+    config_name = config.MODEL_CONFIG,
+    checkpoint_path = Path(config.CHECKPOINT_PATH),
+    **config.MODEL_PARAMS
+)
 
-root.bind('<Return>', get_entry_text)
-input_field.bind('<KeyRelease>', on_entry_change) 
-input_field.focus_set()
-root.mainloop()
+# Input area
+textlabel = tk.ttk.Label(root, text="Enter text to inference")
+textlabel.pack(**DEFAULT_PADDING)
+textarea = tk.Text(root, height=1, width=40, borderwidth=5, relief=tk.FLAT, highlightthickness=0, wrap="word", bg="#424549")
+textarea.pack(fill='both', expand=True, **DEFAULT_PADDING)
+
+# Feedback widget
+statustext = tk.StringVar()
+statuslabel = tk.ttk.Label(root, textvariable=statustext)
+set_status(1)
+statuslabel.pack()
+
+# Submit button
+submit_btn = tk.ttk.Button(root, text="Generate Audio", command=lambda: action_return())
+submit_btn.pack(**DEFAULT_PADDING)
+
+# Model dropdown box (future feature)
+
+# don't want to bind to just textarea, since use case for this will likely involve rapid alt-tabbing, may miss target
+# binding only to root will not catch / prevent the keypress if textarea widget is focused!
+# definitely still crude
+root.bind('<Return>', key_enter) 
+textarea.bind('<Return>', key_enter) 
+root.bind("<Up>", key_arrwup)
+textarea.bind("<Up>", key_arrwup)
+root.bind("<Down>", key_arrwdwn)
+textarea.bind("<Down>", key_arrwdwn)
+root.bind("<Escape>", key_esc)
+textarea.bind("<Escape>", key_esc)
+
+logger.debug("Entering TKinter mainloop")
+try:
+    root.mainloop()
+except KeyboardInterrupt:
+    logger.info("KeyboardInterrupt, stopping program")
