@@ -129,6 +129,7 @@ soundfile>=0.13.1
 soupsieve>=2.8
 soxr>=1.0.0
 stack-data>=0.6.3
+sv_ttk>=2.6.1
 sympy>=1.13.3
 tensorboard>=2.20.0
 tensorboard-data-server>=0.7.2
