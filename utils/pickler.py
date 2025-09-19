@@ -6,23 +6,21 @@ from os import PathLike
 from loguru import logger
 from numpy import load
 
-def load_model_sources(
-    token_paths: tuple[PathLike, ...],
-    text_paths: tuple[PathLike, ...]
+def load_model_source(
+    token_path: PathLike,
+    text_path: PathLike
+def load_model_source(
+    token_path: PathLike,
+    text_path: PathLike
 ):
-    if len(token_paths) != len(text_paths):
-        raise ValueError(
-            f"Number of text files ({len(text_paths)}) and token files ({len(token_paths)}) should be the same"
-        )
-    for token_path, text_path in zip(token_paths, text_paths):
-        if token_path.exists() and text_path.exists():
-            text = None
-            with open(text_path, "r") as infile:
-                text = infile.read()
-            data = load(token_path)
-            yield (data, text)
-        else:
-            raise FileNotFoundError(f"File {token_path} does not exist.")
+    if token_path.exists() and text_path.exists():
+        text = None
+        with open(text_path, "r") as infile:
+            text = infile.read()
+        data = load(token_path)
+        return (data, text)
+    else:
+        raise FileNotFoundError(f"File {token_path} does not exist.")
 
 def save_model_source(
     semantic_token_data: NDArray,

@@ -743,6 +743,15 @@ class Model:
         runner.start()
         return runner
 
-    def __del__(self):
-        del self.audio_model
-
+    def update_params(self,
+        chunk_length: int = None,
+        max_new_tokens: int = None,
+        top_p: float = None,
+        repetition_penalty: float = None,
+        temperature: float = None,
+    ):
+        self.chunk_length = chunk_length if chunk_length is not None else self.chunk_length
+        self.max_new_tokens = max_new_tokens if max_new_tokens is not None else self.max_new_tokens
+        self.top_p = top_p if top_p is not None else self.top_p
+        self.repetition_penalty = repetition_penalty if repetition_penalty is not None else self.repetition_penalty
+        self.temperature = temperature if temperature is not None else self.temperature
