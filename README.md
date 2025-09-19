@@ -4,8 +4,10 @@ Total overhual of https://github.com/scritty1249/mouthpiece utilizing a configur
 
 This project was intended to act as a text-to-speech mouthpiece for when I wanted to speak over a call while trying to avoid physically making noise.\
 While testing v1 of this project, a friend complained that they were uncomfortable randomly hearing "unfamilar" voices.\
+<br/>
 The solution was clear:\
-*create a model that sounds more like my friends.*
+*create a model that sounds more like me.*\
+Since that would definitely be more relaxing.
 
 # Installation
 As always, torch and torchaudio version should be changed to match whichever CUDA version the host machine has installed.\
