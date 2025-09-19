@@ -27,9 +27,9 @@ As always, torch and torchaudio version should be changed to match whichever CUD
 ### Spellcheck
 Light research indicated that allowing natively present spellcheck to interact with the application window is not possible for my development platform.\
 Running our own spellchecker would be extremely expensive and come at the cost of model inferencing time- so I will not be pursing this idea further.
-### "Hot-swapping" Models during runtime
+### "Hot-swapping" Models during runtime (done)
 Definitely will implement.
-### Modifying model parameters during runtime
+### Modifying model parameters during runtime (done)
 May implement, but would require a complete overhaul / removal of the config files.
 ### Training new models during runtime
 May implement, but only if and after model swapping feature is done.
