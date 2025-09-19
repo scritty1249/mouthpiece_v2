@@ -23,4 +23,15 @@ As always, torch and torchaudio version should be changed to match whichever CUD
 - __example.wav__: Requires a 5-20 second snippet of audio in waveform format. Accepts multiple files of varying sample rates.
 - __example.txt__: Transcript corrosponding to the audio. Also accepts multiple files.
 
+# Thoughts on features
+### Spellcheck
+Light research indicated that allowing natively present spellcheck to interact with the application window is not possible for my development platform.\
+Running our own spellchecker would be extremely expensive and come at the cost of model inferencing time- so I will not be pursing this idea further.
+### "Hot-swapping" Models during runtime
+Definitely will implement.
+### Modifying model parameters during runtime
+May implement, but would require a complete overhaul / removal of the config files.
+### Training new models during runtime
+May implement, but only if and after model swapping feature is done.
+
 # Usage
