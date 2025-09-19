@@ -8,7 +8,7 @@ pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=True, cwd
 
 # Tuples of Name, Textfile path, Waveform path
 MODELS = [
-    ("example0", ".\samples\example0.txt", ".\samples\example0.wav")
+    ("example0", "./samples/example0.txt", "./samples/example0.wav")
 ]
 for name, text, wav in MODELS:
     text_data = None

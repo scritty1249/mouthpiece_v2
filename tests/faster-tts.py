@@ -10,11 +10,6 @@ import config
 
 # Assumes model already exists
 
-EXTRA_OPTIONS = {
-    "top_p": 0.88,
-    "repetition_penalty": 1.12,
-    "temperature": 0.84
-}
 MODEL_BASE_PATH = (Path(config.MODELS_DIR) / config.MODEL)
 MODEL_TOKEN_PATH = MODEL_BASE_PATH.with_suffix(".npy")
 MODEL_TEXT_PATH = MODEL_BASE_PATH.with_suffix(".txt")
