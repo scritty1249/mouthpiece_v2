@@ -1,0 +1,29 @@
+MODELS = [ # format is: Model name, (Textfile path, ...), (Wavfile path, ...)
+    (
+        "sample",
+        (
+            "../samples/sample0.txt",
+            "../samples/sample1.txt",
+            "../samples/sample2.txt",
+            "../samples/sample3.txt",
+            "../samples/sample4.txt",
+            "../samples/sample5.txt",
+            "../samples/sample6.txt",
+            "../samples/sample7.txt",
+            "../samples/sample8.txt",
+            "../samples/sample9.txt"
+        ),
+        (
+            "../samples/sample0.wav",
+            "../samples/sample1.wav",
+            "../samples/sample2.wav",
+            "../samples/sample3.wav",
+            "../samples/sample4.wav",
+            "../samples/sample5.wav",
+            "../samples/sample6.wav",
+            "../samples/sample7.wav",
+            "../samples/sample8.wav",
+            "../samples/sample9.wav"
+        )
+    )
+]

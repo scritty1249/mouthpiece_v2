@@ -1,6 +1,7 @@
 .*
 _*
 config.py
+train_config.py
 models/*
 samples/*
 !__init__*
