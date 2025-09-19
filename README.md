@@ -3,7 +3,7 @@ Heavily based off of https://github.com/fishaudio/fish-speech\
 Total overhual of https://github.com/scritty1249/mouthpiece utilizing a configurable model and real file hierarchy!
 
 This project was intended to act as a text-to-speech mouthpiece for when I wanted to speak over a call while trying to avoid physically making noise.\
-A while testing v1 of this project, a friend complained that they were uncomfortable randomly hearing "unfamilar" voices.\
+While testing v1 of this project, a friend complained that they were uncomfortable randomly hearing "unfamilar" voices.\
 The solution was clear:\
 *create a model that sounds more like my friends.*
 
