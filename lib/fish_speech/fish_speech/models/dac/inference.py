@@ -43,44 +43,6 @@ def load_model(config_name, checkpoint_path, device="cuda"):
     logger.info(f"Loaded model: {result}")
     return model
 
-
-@torch.no_grad()
-def semantic_tokenizer(
-    input_path: Path = Path("../test.wav"),
-    config_name: str = "modded_dac_vq",
-    checkpoint_path: Path = Path("checkpoints/openaudio-s1-mini/codec.pth"),
-    device: str = "cuda"
-) -> np.typing.NDArray:
-    model = load_model(config_name, checkpoint_path, device=device)
-
-    if input_path.suffix in AUDIO_EXTENSIONS:
-        logger.info(f"Processing in-place reconstruction of {input_path}")
-
-        # Load audio
-        audio, sr = torchaudio.load(str(input_path))
-        if audio.shape[0] > 1:
-            audio = audio.mean(0, keepdim=True)
-        audio = torchaudio.functional.resample(audio, sr, model.sample_rate)
-
-        audios = audio[None].to(device)
-        logger.info(
-            f"Loaded audio with {audios.shape[2] / model.sample_rate:.2f} seconds"
-        )
-
-        # VQ Encoder
-        audio_lengths = torch.tensor([audios.shape[2]], device=device, dtype=torch.long)
-        indices, indices_lens = model.encode(audios, audio_lengths)
-
-        if indices.ndim == 3:
-            indices = indices[0]
-
-        logger.info(f"Generated indices of shape {indices.shape}")
-
-        # Save indices
-        return indices.cpu().numpy()
-    else:
-        raise ValueError(f"Unknown input type: {input_path}")
-
 @torch.no_grad()
 def generate_audio(
     compiled_tokens: np.typing.NDArray,
@@ -106,3 +68,46 @@ def generate_audio(
     # Save audio
     fake_audio = fake_audios[0, 0].float().cpu().numpy() # mono audio
     return (fake_audio, model.sample_rate)
+
+@torch.no_grad()
+def semantic_tokenizer(
+    input_paths: tuple[Path, ...] = (Path("../test.wav")),
+    config_name: str = "modded_dac_vq",
+    checkpoint_path: Path = Path("checkpoints/openaudio-s1-mini/codec.pth"),
+    device: str = "cuda"
+) -> np.typing.NDArray:
+    model = load_model(config_name, checkpoint_path, device=device)
+    audio_array = []
+    for input_path in input_paths:
+        if input_path.suffix in AUDIO_EXTENSIONS:
+            logger.info(f"Processing in-place reconstruction of {input_path}")
+
+            # Load audio
+            audio, sr = torchaudio.load(str(input_path))
+            if audio.shape[0] > 1:
+                audio = audio.mean(0, keepdim=True)
+            audio = torchaudio.functional.resample(audio, sr, model.sample_rate)
+
+            audios = audio[None].to(device)
+            logger.info(
+                f"Loaded audio with {audios.shape[2] / model.sample_rate:.2f} seconds"
+            )
+            audio_array.append(audios)
+        else:
+            raise ValueError(f"Unknown input type: {input_path}")
+    logger.info(f"Combining {len(audio_array)} audio samples")
+    big_audio = torch.cat(audio_array, dim=2) # concatenate along the time dimension
+    logger.info(
+        f"Loaded audio with {big_audio.shape[2] / model.sample_rate:.2f} seconds"
+    )
+    # VQ Encoder
+    audio_lengths = torch.tensor([big_audio.shape[2]], device=device, dtype=torch.long)
+    indices, indices_lens = model.encode(big_audio, audio_lengths)
+
+    if indices.ndim == 3:
+        indices = indices[0]
+
+    logger.info(f"Generated indices of shape {indices.shape}")
+
+    # Save indices
+    return indices.cpu().numpy()
