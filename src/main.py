@@ -1,5 +1,7 @@
 import pyrootutils
 pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning) # torch distro being used has a depreceated method we don't care about.
 
 import threading
 import tkinter as tk
@@ -26,13 +28,11 @@ def key_arrwup(event):
     if textarea.index(tk.INSERT) == "1.0": # only trigger if cursor is already at the start of text
         logger.debug("Triggered key arrow up")
         traverse_history()
-    return "break"
 
 def key_arrwdwn(event):
     if textarea.index(tk.INSERT) == textarea.index(tk.END + "-1c"): # only trigger if cursor is already at the end of text
         logger.debug("Triggered key arrow down")
         traverse_history(False)
-    return "break"
 
 def key_esc(event):
     global TEXT_HISTORY
