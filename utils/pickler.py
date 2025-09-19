@@ -24,8 +24,6 @@ def load_model_sources(
         else:
             raise FileNotFoundError(f"File {token_path} does not exist.")
 
-
-
 def save_model_source(
     semantic_token_data: NDArray,
     output_path: Path,

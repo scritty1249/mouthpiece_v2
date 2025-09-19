@@ -18,14 +18,14 @@ gen = pickler.load_model_sources([MODEL_TOKEN_PATH], [MODEL_TEXT_PATH])
 MODEL_TOKEN, MODEL_TEXT = next(gen) # supports loading multiple models at once, but this test only uses one
 
 try:
-    logger.info("Initializing model")
+    logger.info("Initializing model " + config.MODEL)
     model = Model(
         prompt_text = MODEL_TEXT,
         prompt_token = MODEL_TOKEN,
         checkpoint_dir = Path(config.CHECKPOINT_DIR),
         config_name = config.MODEL_CONFIG,
         checkpoint_path = Path(config.CHECKPOINT_PATH),
-        **EXTRA_OPTIONS
+        **config.MODEL_PARAMS
     )
     while True:
         text = input("Enter text to read:\n")
@@ -33,10 +33,8 @@ try:
         logger.info("playing audio")
         runners = [r for r in audio.mirror_audio(
             audio_array,
-            config.AUDIO_DEVICES
-        )]
-        for runner in runners:
-            runner.join()
-        logger.info("finished playing audio")
+            config.AUDIO_DEVICES,
+            callbacks=[lambda: logger.info("finished playing audio")]
+        )]        
 except KeyboardInterrupt:
     logger.info("KeyboardInterrupt, stopping program")
