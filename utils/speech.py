@@ -677,20 +677,27 @@ class Model:
         self.audio_model = load_model(self.config_name, self.checkpoint_path, device=self.device)
         # self.audio_model.share_memory() # fork not supported on windows so this is useless
 
-    def generate_tokens(self, text: str):
+    def generate_tokens(self,
+        text: str,
+        chunk_length: int = None,
+        max_new_tokens: int = None,
+        top_p: float = None,
+        repetition_penalty: float = None,
+        temperature: float = None,
+    ):
         generator = generate_long(
             model=self.model,
             device=self.device,
             decode_one_token=self.decode_one_token,
             text=text,
             num_samples=1,
-            max_new_tokens=self.max_new_tokens,
-            top_p=self.top_p,
-            repetition_penalty=self.repetition_penalty,
-            temperature=self.temperature,
+            max_new_tokens=max_new_tokens if max_new_tokens is not None else self.max_new_tokens,
+            top_p=top_p if top_p is not None else self.top_p,
+            repetition_penalty=repetition_penalty if repetition_penalty is not None else self.repetition_penalty,
+            temperature=temperature if temperature is not None else self.temperature,
             compile=self.compile,
             iterative_prompt=self.iterative_prompt,
-            chunk_length=self.chunk_length,
+            chunk_length=chunk_length if chunk_length is not None else self.chunk_length,
             prompt_text=[self.prompt_text] if self.prompt_text else None,
             prompt_tokens=self.prompt_tokens_list,
         )
@@ -731,19 +738,19 @@ class Model:
     def generate(self, text: str):
         return self.generate_audio(self.generate_tokens(text))
 
-    def _generate_audio_runner(self, text, callback: Optional[Callable[[np.typing.NDArray, int], None]] = None):
-        tokens = self.generate_tokens(text)
+    def _generate_audio_runner(self, text, callback: Optional[Callable[[np.typing.NDArray, int], None]] = None, kwargs: dict = {}):
+        tokens = self.generate_tokens(text, **kwargs)
         audio, samplerate = self.generate_audio(tokens)
         if callback is not None:
             callback(audio, samplerate)
         return (audio, samplerate)
 
-    def generate_async(self, text: str, callback: Optional[Callable[[np.typing.NDArray, int], None]] = None):
-        runner = threading.Thread(target=self._generate_audio_runner, args=(text, callback), daemon=True)
+    def generate_async(self, text: str, callback: Optional[Callable[[np.typing.NDArray, int], None]] = None, **kwargs):
+        runner = threading.Thread(target=self._generate_audio_runner, args=(text, callback, kwargs), daemon=True)
         runner.start()
         return runner
 
-    def update_params(self,
+    def update_default_params(self,
         chunk_length: int = None,
         max_new_tokens: int = None,
         top_p: float = None,

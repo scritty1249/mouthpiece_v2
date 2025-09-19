@@ -9,9 +9,6 @@ from numpy import load
 def load_model_source(
     token_path: PathLike,
     text_path: PathLike
-def load_model_source(
-    token_path: PathLike,
-    text_path: PathLike
 ):
     if token_path.exists() and text_path.exists():
         text = None

@@ -58,7 +58,7 @@ def traverse_history(up: bool = True):
 
 def action_return():
     print(statuslabel.cget("foreground"))
-    if statuslabel.cget("foreground") == "white":
+    if statuslabel.cget("foreground") == "white" and get_text(False):
         text = get_text(False)
         processed_text = get_text()
         logger.info("Triggered text: " + processed_text)
@@ -98,10 +98,15 @@ def set_status(state: int):
         statuslabel.config(foreground = "green")
     statuslabel.update()
 
+def clamp(min_val, max_val, val):
+    return min(max_val, max(min_val, val))
+
 def select_model(event):
+    global ACTIVE_NAME
     model_name = selected_model.get()
-    runner = threading.Thread(target=lambda mn: load_model_preset(mn), args=(model_name,))
-    runner.start()
+    if model_name != ACTIVE_NAME:
+        runner = threading.Thread(target=lambda mn: load_model_preset(mn), args=(model_name,))
+        runner.start()
 
 def _callback_gore(audio_array, samplerate):
     logger.debug("Finished generating audio")
@@ -119,16 +124,20 @@ def generate_play(text: str):
         set_status(2)
         MODEL.generate_async(
             text = text,
-            callback = _callback_gore
+            callback = _callback_gore,
+            top_p = top_p_value.get() / 100,
+            repetition_penalty = rep_pen_value.get() / 100,
+            temperature = temp_value.get() / 100
         )
 
 def load_model_preset(name: str):
-    global MODEL_PATHS, MODEL, MODEL_POOL
+    global MODEL_PATHS, MODEL, MODEL_POOL, ACTIVE_NAME
     with MODEL_POOL:
         set_status(2)
         del MODEL
         model_idx = MODEL_PATHS["name"].index(name)
         logger.info(f"Initializing model preset {name}")
+        ACTIVE_NAME = name
         model_token, model_text = pickler.load_model_source(MODEL_PATHS["token"][model_idx], MODEL_PATHS["text"][model_idx])
         MODEL = Model(
             prompt_text = model_text,
@@ -148,13 +157,10 @@ root = tk.Tk()
 windll.shcore.SetProcessDpiAwareness(1) # fixes blurriness
 root.option_add("*Font", ("Segoe UI", 12))
 root.title("Mouthpiece v2")
-root.geometry("400x300+300+120")
+root.geometry("400x500+300+120")
 use_dark_theme()
 
 logger.info("Loading data")
-# MODEL_BASE_PATH = (Path(config.MODELS_DIR) / config.MODEL)
-# MODEL_TOKEN_PATH = MODEL_BASE_PATH.with_suffix(".npy")
-# MODEL_TEXT_PATH = MODEL_BASE_PATH.with_suffix(".txt")
 MODEL_PATHS = { "name": [], "token": [], "text": [] }
 for filepath in Path(config.MODELS_DIR).iterdir():
     if filepath.suffix == ".npy" and filepath.stem not in MODEL_PATHS.keys():
@@ -168,6 +174,7 @@ for filepath in Path(config.MODELS_DIR).iterdir():
 logger.debug(f"Found {len(MODEL_PATHS['name'])} model presets")
 MODEL_POOL = threading.Semaphore(1)
 MODEL = None
+ACTIVE_NAME = ""
 
 # Input area
 textlabel = tk.ttk.Label(root, text="Enter text to speech")
@@ -185,13 +192,62 @@ statuslabel.pack()
 submit_btn = tk.ttk.Button(root, text="Generate Audio", command=lambda: action_return())
 submit_btn.pack(**DEFAULT_PADDING)
 
-# Model dropdown box (future feature)
 options_frame = tk.ttk.Frame(root, padding="10 10 10 10", relief="groove", borderwidth=0)
 options_frame.pack()
+
+# Top-P slider
+top_p_label = tk.ttk.Label(options_frame, text="Top-P", justify="left", anchor=tk.W)
+top_p_label.grid(row=0, column=0, sticky=tk.W, **DEFAULT_PADDING)
+top_p_value = tk.DoubleVar()
+top_p_value.set(0.8)
+top_p_slider = tk.ttk.Scale(
+    options_frame,
+    from_= 70,  # Minimum value
+    to = 95,   # Maximum value
+    orient='horizontal', # Orientation: 'horizontal' or 'vertical'
+    variable = top_p_value, # Link to a variable
+)
+top_p_slider.grid(row=0, column=1, **DEFAULT_PADDING)
+top_p_value_label = tk.ttk.Entry(options_frame, textvariable=top_p_value, width=3, justify="left")
+top_p_value_label.grid(row=0, column=3, sticky=tk.E, **DEFAULT_PADDING)
+
+# Temperature slider
+temp_label = tk.ttk.Label(options_frame, text="Temperature", justify="left", anchor=tk.W)
+temp_label.grid(row=1, column=0, sticky=tk.W, **DEFAULT_PADDING)
+temp_value = tk.DoubleVar()
+temp_value.set(0.8)
+temp_slider = tk.ttk.Scale(
+    options_frame,
+    from_= 70,  # Minimum value
+    to = 100,   # Maximum value
+    orient='horizontal', # Orientation: 'horizontal' or 'vertical'
+    variable = temp_value, # Link to a variable
+)
+temp_slider.grid(row=1, column=1, **DEFAULT_PADDING)
+temp_value_label = tk.ttk.Entry(options_frame, textvariable=temp_value, width=3, justify="left")
+temp_value_label.grid(row=1, column=3, sticky=tk.E, **DEFAULT_PADDING)
+
+# Repetition penalty slider
+rep_pen_label = tk.ttk.Label(options_frame, text="Repetition Penalty", justify="left", anchor=tk.W)
+rep_pen_label.grid(row=2, column=0, sticky=tk.W, **DEFAULT_PADDING)
+rep_pen_value = tk.DoubleVar()
+rep_pen_value.set(0.8)
+rep_pen_slider = tk.ttk.Scale(
+    options_frame,
+    from_= 100,  # Minimum value
+    to = 120,   # Maximum value
+    orient='horizontal', # Orientation: 'horizontal' or 'vertical'
+    variable = rep_pen_value, # Link to a variable
+)
+rep_pen_slider.grid(row=2, column=1, **DEFAULT_PADDING)
+rep_pen_value_label = tk.ttk.Entry(options_frame, textvariable=rep_pen_value, width=3, justify="left")
+rep_pen_value_label.grid(row=2, column=3, sticky=tk.E, **DEFAULT_PADDING)
+
+# Model dropdown box (future feature)
 selected_model = tk.StringVar()
 model_options = tk.ttk.Combobox(options_frame, textvariable=selected_model, values=MODEL_PATHS["name"], state="readonly")
 model_options.set(config.MODEL)
-model_options.pack(pady=10)
+model_options.grid(row=3, column=0, columnspan=3, **DEFAULT_PADDING)
 
 # don't want to bind to just textarea, since use case for this will likely involve rapid alt-tabbing, may miss target
 # binding only to root will not catch / prevent the keypress if textarea widget is focused!
@@ -204,6 +260,9 @@ root.bind("<Down>", key_arrwdwn)
 textarea.bind("<Down>", key_arrwdwn)
 root.bind("<Escape>", key_esc)
 textarea.bind("<Escape>", key_esc)
+# Clamping slider values
+top_p_value_label.bind("<FocusOut>", lambda *args: top_p_value.set(clamp(70, 95, top_p_value.get())))
+top_p_value.trace("r", lambda *args: top_p_value.set(clamp(70, 95, top_p_value.get()))) # [!] Doesn't work- value is modified AFTER preprocessed value has already been returned. Fix ASAP.
 
 model_options.bind("<<ComboboxSelected>>", select_model)
 threading.Thread(target=load_model_preset, args=(config.MODEL,)).start()
