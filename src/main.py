@@ -18,6 +18,19 @@ from sv_ttk import use_dark_theme
 from string import ascii_letters
 from utils.history import BidirectionalIterator
 
+class Limiter(tk.ttk.Scale):
+    """ ttk.Scale sublass that limits the precision of values. """
+
+    def __init__(self, *args, **kwargs):
+        self.precision = kwargs.pop('precision')  # Remove non-std kwarg.
+        self.chain = kwargs.pop('command', lambda *a: None)  # Save if present.
+        super(Limiter, self).__init__(*args, command=self._value_changed, **kwargs)
+
+    def _value_changed(self, newvalue):
+        newvalue = round(float(newvalue), self.precision)
+        self.winfo_toplevel().globalsetvar(self.cget('variable'), (newvalue))
+        self.chain(newvalue)  # Call user specified function.
+
 def key_enter(event):
     if not (event.state & 0x0001): # only trigger if shift key is not also pressed (state & 0x0001 means shift is down)
         logger.debug("Triggered key enter")
@@ -124,9 +137,9 @@ def generate_play(text: str):
         MODEL.generate_async(
             text = text,
             callback = _callback_gore,
-            top_p = top_p_value.get() / 100,
-            repetition_penalty = rep_pen_value.get() / 100,
-            temperature = temp_value.get() / 100
+            top_p = top_p_value.get(),
+            repetition_penalty = rep_pen_value.get(),
+            temperature = temp_value.get()
         )
 
 def load_model_preset(name: str):
@@ -198,13 +211,14 @@ options_frame.pack()
 top_p_label = tk.ttk.Label(options_frame, text="Top-P", justify="left", anchor=tk.W)
 top_p_label.grid(row=0, column=0, sticky=tk.W, **DEFAULT_PADDING)
 top_p_value = tk.DoubleVar()
-top_p_value.set(88)
-top_p_slider = tk.ttk.Scale(
+top_p_value.set(0.88)
+top_p_slider = Limiter(
     options_frame,
-    from_= 70,  # Minimum value
-    to = 95,   # Maximum value
+    from_= 0.7,  # Minimum value
+    to = 0.95,   # Maximum value
     orient='horizontal', # Orientation: 'horizontal' or 'vertical'
     variable = top_p_value, # Link to a variable
+    precision = 3
 )
 top_p_slider.grid(row=0, column=1, **DEFAULT_PADDING)
 top_p_value_label = tk.ttk.Entry(options_frame, textvariable=top_p_value, width=3, justify="left")
@@ -214,13 +228,14 @@ top_p_value_label.grid(row=0, column=3, sticky=tk.E, **DEFAULT_PADDING)
 temp_label = tk.ttk.Label(options_frame, text="Temperature", justify="left", anchor=tk.W)
 temp_label.grid(row=1, column=0, sticky=tk.W, **DEFAULT_PADDING)
 temp_value = tk.DoubleVar()
-temp_value.set(84)
-temp_slider = tk.ttk.Scale(
+temp_value.set(0.84)
+temp_slider = Limiter(
     options_frame,
-    from_= 70,  # Minimum value
-    to = 100,   # Maximum value
+    from_= 0.7,  # Minimum value
+    to = 1,   # Maximum value
     orient='horizontal', # Orientation: 'horizontal' or 'vertical'
     variable = temp_value, # Link to a variable
+    precision = 3
 )
 temp_slider.grid(row=1, column=1, **DEFAULT_PADDING)
 temp_value_label = tk.ttk.Entry(options_frame, textvariable=temp_value, width=3, justify="left")
@@ -230,13 +245,14 @@ temp_value_label.grid(row=1, column=3, sticky=tk.E, **DEFAULT_PADDING)
 rep_pen_label = tk.ttk.Label(options_frame, text="Repetition Penalty", justify="left", anchor=tk.W)
 rep_pen_label.grid(row=2, column=0, sticky=tk.W, **DEFAULT_PADDING)
 rep_pen_value = tk.DoubleVar()
-rep_pen_value.set(112)
-rep_pen_slider = tk.ttk.Scale(
+rep_pen_value.set(1.12)
+rep_pen_slider = Limiter(
     options_frame,
-    from_= 100,  # Minimum value
-    to = 120,   # Maximum value
+    from_= 1,  # Minimum value
+    to = 1.2,   # Maximum value
     orient='horizontal', # Orientation: 'horizontal' or 'vertical'
     variable = rep_pen_value, # Link to a variable
+    precision = 3
 )
 rep_pen_slider.grid(row=2, column=1, **DEFAULT_PADDING)
 rep_pen_value_label = tk.ttk.Entry(options_frame, textvariable=rep_pen_value, width=3, justify="left")
@@ -260,8 +276,8 @@ textarea.bind("<Down>", key_arrwdwn)
 root.bind("<Escape>", key_esc)
 textarea.bind("<Escape>", key_esc)
 # Clamping slider values
-top_p_value_label.bind("<FocusOut>", lambda *args: top_p_value.set(clamp(70, 95, top_p_value.get())))
-top_p_value.trace("r", lambda *args: top_p_value.set(clamp(70, 95, top_p_value.get()))) # [!] Doesn't work- value is modified AFTER preprocessed value has already been returned. Fix ASAP.
+top_p_value_label.bind("<FocusOut>", lambda *args: top_p_value.set(clamp(0.7, 0.95, top_p_value.get())))
+top_p_value.trace("r", lambda *args: top_p_value.set(clamp(0.7, 0.95, top_p_value.get()))) # [!] Doesn't work- value is modified AFTER preprocessed value has already been returned. Fix ASAP.
 
 model_options.bind("<<ComboboxSelected>>", select_model)
 threading.Thread(target=load_model_preset, args=(config.MODEL,)).start()
