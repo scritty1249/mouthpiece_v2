@@ -650,7 +650,8 @@ class Model:
         self.temperature = temperature
 
         precision = torch.half if half else torch.bfloat16
-        logger.info("Loading model ...")
+        logger.info("Loading model on device: " + device)
+        logger.debug("CUDA Kernal fusion is " + "ON" if compile else "OFF")
         t0 = time.time()
         self.model, self.decode_one_token = init_model(
             checkpoint_dir, device, precision, compile=compile
