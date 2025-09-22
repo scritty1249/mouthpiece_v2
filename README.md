@@ -18,6 +18,24 @@ As always, torch and torchaudio version should be changed to match whichever CUD
 - pip install the regular `requirements.txt` after
 - fill in relevant fields in `config_train.py` to generate model tokens
 - execute `create_model.py` from project root directory
+<details>
+<summary>(optional) Using the <code>compile=True</code> model parameter on Windows devices</summary>
+Attempting to generate speech with CUDA kernal fusion enabled on Windows devices returns the following error from the pytorch binary:</br>
+<code>
+OverflowError (Python int too large to convert to C long)
+</code></br>
+To resolve this, follow instructions listed <a href="https://github.com/pytorch/pytorch/issues/162430#issuecomment-3289054096">here</a> for modifying your specific pytorch binary (or rebuild from source with the patch mentioned at the top of the linked issue)</br>
+After applying this fix, it will inference fine but will still raise the warning:</br>
+<code>
+UserWarning: Enable tracemalloc to get the object allocation traceback
+</code></br>
+On either of the following lines:</br>
+<code>
+equal |= a_isnan and b_isnan</br>
+mask |= a_isnan and not b_isnan
+</code></br>
+Inference time still shows significant improvement for enabling the setting, despite the warnings.</br>
+</details>
 
 # Generating model tokens
 - __example.wav__: Requires a 5-20 second snippet of audio in waveform format. Accepts multiple files of varying sample rates.
